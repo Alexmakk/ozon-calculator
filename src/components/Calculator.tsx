@@ -1,18 +1,21 @@
-import { Component } from 'vue-property-decorator';
+import { Component, Prop, Emit } from 'vue-property-decorator';
 import { VueComponent } from '../shims-vue';
-import { useStore } from 'vuex-simple';
-import { CalcStore } from '@/store/store';
-
 import { Sign } from '@/types/sign';
 import { Num } from '@/types/num';
 
 import styles from './Calculator.css?module'
 
+interface Props {
+  buffer: string
+  result: number
+  handler: (e: Event) => void
+}
 @Component
-export default class Calculator extends VueComponent  {
+export default class Calculator extends VueComponent<Props>  {
   
-  buffer: string = '';
-  result: number = 0;
+  @Prop() buffer!: string
+  @Prop() result!: number
+  @Prop() handler!: (e: Event) => void
 
   signs: Sign[] = [
       Sign["C"],
@@ -26,45 +29,6 @@ export default class Calculator extends VueComponent  {
       Num["One"], Num["Two"], Num["Three"],
       Num["Zero"],
     ]
-
-  eventHandler(e:any): void {
-    let calcKey: string = e.toElement.textContent;
-    if (calcKey === Sign["="]) {
-      
-     this.calculation() 
-
-    } else if (calcKey === Sign['C']) {
-      this.buffer = '';
-      this.result = 0;
-      this.commitClearState()
-    } else {
-      this.buffer+=calcKey;
-      this.commitAddBuffer(calcKey)
-    }
-  }
-
-  async calculation() {
-    await new Promise(r => setTimeout(r, 2000));
-    this.result = +eval(this.buffer);
-    this.buffer = '' + this.result
-    this.commitSetBuffer(this.buffer)
-    this.commitSetResult(this.result)
-  }
-
-  public store: CalcStore = useStore(this.$store);
-
-  public commitSetResult(nb: number) {
-    this.store.calculation.setResult(nb)
-  }
-  public commitSetBuffer(st: string) {
-    this.store.calculation.setBuffer(st)
-  }
-  public commitAddBuffer(st: string) {
-    this.store.calculation.addBuffer(st)
-  }
-  public commitClearState() {
-    this.store.calculation.clearState()
-  }
 
   render() {
     return (
@@ -86,7 +50,7 @@ export default class Calculator extends VueComponent  {
             {this.nums.map(num =>
               <span
                 class={styles.num}
-                onClick={this.eventHandler}
+                onClick={this.handler}
               >
                 {num}
               </span>)
@@ -96,7 +60,7 @@ export default class Calculator extends VueComponent  {
             {this.signs.map(sign =>
               <span
                 class={styles.sign}
-                onClick={this.eventHandler}
+                onClick={this.handler}
               >
                 {sign}
               </span>)
